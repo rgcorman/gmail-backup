@@ -1,3 +1,4 @@
+#!/usr/bin/env ruby
 #
 # This script is intended to be executed by a user with administrative privileges
 # for a Google Apps domain.
@@ -24,6 +25,7 @@ require 'rubygems'
 require 'json'
 require 'rest_client'
 require 'rexml/document'
+require 'base64'
 require 'io/console'
 
 include REXML
@@ -127,9 +129,9 @@ def init
   # Load the public key into a string, if one was specified
   #
   if $options[:publickeyfile]
-    file = File.open($options[:publickeyfile], "r")
-    $options[:publickey] = file.read
-    file.close
+    public_key_contents = File.read($options[:publickeyfile])
+    public_key_contents_base64 = Base64.encode64(public_key_contents)
+    $options[:publickey] = public_key_contents_base64
   end
 
   #
@@ -242,7 +244,9 @@ def outputRequestIDs
   if $options[:outputFile]
     output = open($options[:outputFile], "w")
     output.truncate(0)
+    p $options[:requestIDs]
     $options[:requestIDs].each {|r|
+      next if Array === r[:requestID]
       output << (r[:requestID] + "," + r[:user] +"\n")
     }
     output.close
@@ -255,8 +259,9 @@ def main
   
   if $options[:debug]
       puts headers
-      puts $options
+      puts $options.merge({adminpwd: "HIDDEN"})
   end
+  exit
   
   init
   $auth_token = get_auth_token $options[:adminuser], $options[:adminpwd]
