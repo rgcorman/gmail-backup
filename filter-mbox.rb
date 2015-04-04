@@ -98,11 +98,46 @@ end
 
 def inputAccountsFile
   file = File.open($options[:accountsFile], "r")
-  contents = ""
+  count = 0
   file.each {|line|
     $options[:accounts][line.strip] = true; # add account domain to hash of accounts (as key). The value is arbitrary.
+    count += 1
   }
+  puts "Loaded " + count.to_s + " account domains"
   file.close
+end
+
+def getDomain(line)
+  line = line.strip.downcase
+  return nil unless line.length > 0
+  parts = line.split "//"
+  if parts.length == 2
+    line = parts[1]
+  end
+  return nil if line.start_with? "http"
+  if line.start_with? "www"
+    line = (line.split ".", 2)[1]
+  end
+  if line.start_with? "m."
+    line = (line.split ".", 2)[1]
+  end
+  line = (line.split "/", 2)[0]
+  return nil if (line.length == 0 || (line.index ".") == nil ) 
+  line
+end
+
+def convertHomepagesFile
+  infile = File.open("homepages.txt", "r")
+  outfile = File.open("domains.txt", "w")
+  outfile.truncate 0
+  infile.each {|line|
+    line = getDomain line
+    next unless line
+    outfile << line << "\n"
+    puts line
+  }
+  infile.close
+  outfile.close
 end
 
 def init
@@ -111,15 +146,7 @@ def init
   inputAccountsFile
 end # init
 
-def is_target (header)
-  (header == 'From' || header == 'Content-Type' || header == 'Message-ID' || header == 'Date' || header == 'From' || header == 'To' || header == 'Subject' || header == 'Sender' || header == 'In-Reply-To')
-end
-
-$DEL = "^"
-
-def getAddress(a)
-  { :address => a.address, :display_name => a.display_name, :domain => a.domain, :name => a.name }
-end
+$DEL = '^'
 
 def getCalendarItems(msg)
   return [] unless msg.sender && (msg.sender.start_with? "calendar-notification")
