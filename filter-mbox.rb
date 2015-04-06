@@ -14,11 +14,11 @@
 #    gpg --output roger2.mbox --decrypt roger2.mbox.encrypted
 #    You will need to have the private key installed, and provide the passphrase.
 #
-# This script requires 
+# This script requires
 #   the mail gem: gem install mail
 #   the icalendar gem: gem install icalendar
 #
-require 'optparse' 
+require 'optparse'
 require 'net/http'
 require 'uri'
 require 'rubygems'
@@ -153,19 +153,24 @@ def getCalendarItems(msg)
   parser = Icalendar::Parser.new Base64.decode64 (msg.body.parts[1].body.raw_source)
   cals = parser.parse
   cal = cals[0]
-  events = cal.events
-  meetings = []
-  events.each {|e|
-    meeting = { :uid => e.uid,
-                :start => e.dtstart ? e.dtstart.strftime('%Y-%m-%dT%H:%M') : nil, 
-                :end => e.dtend ? e.dtend.strftime('%Y-%m-%dT%H:%M') : nil,              
-                :summary => e.summary, 
-                :location => e.location,
-                :organizer => e.organizer ? e.organizer.to : nil, 
-                :attendees => e.attendee.map {|a| a.to} }
-    meetings << meeting 
-  }
-  meetings
+
+  unless cal.nil?
+    events = cal.events
+    meetings = []
+    events.each {|e|
+      meeting = { :uid => e.uid,
+                  :start => e.dtstart ? e.dtstart.strftime('%Y-%m-%dT%H:%M') : nil, 
+                  :end => e.dtend ? e.dtend.strftime('%Y-%m-%dT%H:%M') : nil,              
+                  :summary => e.summary, 
+                  :location => e.location,
+                  :organizer => e.organizer ? e.organizer.to : nil, 
+                  :attendees => e.attendee.map {|a| a.to} }
+      meetings << meeting 
+    }
+    meetings
+  else
+    nil
+  end
 end
 
 # takes a parsed message hash, and a delimiter character, and returns a string in csv format
@@ -237,17 +242,17 @@ def retainMessage?(message)
       return message
     end
   }
-  
+
   # see if an attached meeting contains an account address
   meetings = message[:meetings]
-  meetings.each {|m|
+  meetings.each do |m|
     addrs = m[:attendees] << m[:organizer]
     addrs.each {|a|
       if $options[:accounts].has_key? getEmailDomain(a)
         return message
       end
     }
-  }
+  end unless meetings.nil?
   nil
 end
 
@@ -276,7 +281,18 @@ def parseMessage (message)
             :destinations => e.destinations }
   retainMessage?(email)
 end
-  
+
+# Bit of monkey patching
+class String
+  def force_utf8
+    if !self.valid_encoding?
+      self.encode("UTF-8", :invalid=>:replace, :replace=>"?").encode('UTF-8')
+    else
+      self
+    end
+  end
+end
+
 #
 # Assumes the passed file is open for read, and is positioned at the start
 # if the first line of the message (first line following "From " line).
@@ -285,7 +301,7 @@ end
 def getNextMessage (file)
   message = ''
   while (line = file.gets)
-    return message if (line.match(/\AFrom /))
+    return message if (line.force_utf8.match(/\AFrom /))
     message << line
   end
   message.length == 0 ? nil : message
