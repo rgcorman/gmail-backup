@@ -69,7 +69,8 @@ def processOptions
       exit
     end
   end
-  
+
+  ARGV.push('-h') if ARGV.empty?
   parser.parse! 
 end  # processOptions
 
@@ -169,7 +170,7 @@ def getCalendarItems(msg)
     }
     meetings
   else
-    nil
+    []
   end
 end
 
@@ -279,7 +280,7 @@ def parseMessage (message)
             :attachment? => e.attachments.length > 0, 
             :meetings => meetings, 
             :destinations => e.destinations }
-  retainMessage?(email)
+   retainMessage?(email)
 end
 
 # Bit of monkey patching
@@ -352,7 +353,8 @@ end
 def main
   processOptions
   getUserInput
-  init   
+  init
+
   parseMbox $options[:mboxFile], $options[:mailSummaryFile], $options[:meetingFile], $options[:maxMessages]
 end
 
