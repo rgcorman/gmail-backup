@@ -63,7 +63,7 @@ def processOptions
     opts.on('--headers', 'Generate headers in the output csv files') do
       $options[:headers] = true;
     end
- 
+
     opts.on('-h', '--help', 'Displays Help') do
       puts opts
       exit
@@ -76,26 +76,6 @@ end  # processOptions
 
 def getUserInput
 end  # getUserInput
-
-def inputStatusFile
-  if $options[:statusFile]
-    file = File.open($options[:statusFile], "r")
-    contents = ""
-    file.each {|line|
-      v = line.split ','
-      h = { :requestID => v[0], :user => v[1], :requestedDate => v[2], :status => v[3].strip }
-      if v.length > 4
-        h[:fileUrl0] = v[4].strip
-      end
-      if v.length > 5 
-        h[:fileUrl1] = v[5].strip
-      end
-      
-      $options[:requests].push h
-    }
-    file.close
-  end
-end
 
 def inputAccountsFile
   file = File.open($options[:accountsFile], "r")

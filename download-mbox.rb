@@ -114,8 +114,8 @@ end
 
 def downloadBackups
   $options[:requests].each { |req|
-    encryptedPath = "#{req[:user]}-#{req[:requestID]}.pgp"
-    decryptedPath = "#{req[:user]}-#{req[:requestID]}.mbox"
+    encryptedPath = "#{req[:user]}_#{req[:requestID]}.pgp"
+    decryptedPath = "#{req[:user]}_#{req[:requestID]}.mbox"
 
     # download the encrypted mbox file
     if req[:status] == 'COMPLETED' && req[:fileUrl0]
