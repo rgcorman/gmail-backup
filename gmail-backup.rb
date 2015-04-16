@@ -261,7 +261,6 @@ def main
       puts headers
       puts $options.merge({adminpwd: "HIDDEN"})
   end
-  exit
   
   init
   $auth_token = get_auth_token $options[:adminuser], $options[:adminpwd]
