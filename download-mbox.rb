@@ -1,3 +1,4 @@
+#!/usr/bin/env ruby
 #
 # This script is intended to be executed by a user with administrative privileges
 # for a Google Apps domain.
@@ -99,6 +100,10 @@ def downloadUrl(url, outputPath)
   if $options[:debug]
     puts "Downloading url #{url} to path #{outputPath}"
   end
+  if url.nil? or url.empty?
+    puts "Skipping Downloading url for #{outputPath} because url is empty"
+    return
+  end
   uri = URI.parse(url)
   Net::HTTP.start(uri.host, uri.port, :use_ssl => uri.scheme == 'https') do |http|
     request = Net::HTTP::Get.new uri.path
@@ -116,16 +121,20 @@ def downloadBackups
   $options[:requests].each { |req|
     encryptedPath = "#{req[:user]}_#{req[:requestID]}.pgp"
     decryptedPath = "#{req[:user]}_#{req[:requestID]}.mbox"
+    encryptedPath1 = "#{req[:user]}_#{req[:requestID]}.1.pgp"
+    decryptedPath1 = "#{req[:user]}_#{req[:requestID]}.1.mbox"
 
     # download the encrypted mbox file
     if req[:status] == 'COMPLETED' && req[:fileUrl0]
       puts "Downloading #{encryptedPath}"
-      downloadUrl(req[:fileUrl0], encryptedPath)
+      (downloadUrl(req[:fileUrl0], encryptedPath)                   ) unless File.exists?(encryptedPath)
+      (downloadUrl(req[:fileUrl1], encryptedPath1) if req[:fileUrl1]) unless File.exists?(encryptedPath1)
 
       if $options[:decrypt]
         # decrypt the downloaded file
         puts "Decrypting #{encryptedPath}"
-        system(decrypt_command(encryptedPath, decryptedPath))
+        system(decrypt_command(encryptedPath, decryptedPath))   unless File.exists?(decryptedPath)
+        system(decrypt_command(encryptedPath1, decryptedPath1)) unless File.exists?(decryptedPath1)
       end
     end
   }

@@ -1,3 +1,4 @@
+#!/usr/bin/env ruby
 #
 # This script is intended to be executed by a user with administrative privileges
 # for a Google Apps domain.
@@ -246,7 +247,7 @@ def main
 
   if $options[:debug]
       puts headers
-      puts $options
+      puts $options.merge({adminpwd: "HIDDEN"})
   end
 
   if $options[:all]
