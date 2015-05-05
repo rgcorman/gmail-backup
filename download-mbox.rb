@@ -4,12 +4,12 @@
 # for a Google Apps domain.
 #
 # Usage:
-#   filter-mbox [options]
+#   download-mbox [options]
 #
-#   For list of options enter:   filter-mbox.rb --help
+#   For list of options enter:   download-mbox.rb --help	
 #
 # Example:
-#   filter-mbox --mboxFile="../test/mbox/roger1.mbox" --headers
+#   download-mbox --decrypt
 #
 # To decrypt the downloaded mailboxes, use:
 #    gpg --output roger2.mbox --decrypt roger2.mbox.encrypted
