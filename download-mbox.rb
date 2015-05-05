@@ -83,6 +83,9 @@ def inputStatusFile
       if v.length > 5
         h[:fileUrl1] = v[5].strip
       end
+      if v.length > 6
+        h[:fileUrl2] = v[6].strip
+      end
 
       $options[:requests].push h
       if $options[:debug]
@@ -123,18 +126,22 @@ def downloadBackups
     decryptedPath = "#{req[:user]}_#{req[:requestID]}.mbox"
     encryptedPath1 = "#{req[:user]}_#{req[:requestID]}.1.pgp"
     decryptedPath1 = "#{req[:user]}_#{req[:requestID]}.1.mbox"
+    encryptedPath2 = "#{req[:user]}_#{req[:requestID]}.2.pgp"
+    decryptedPath2 = "#{req[:user]}_#{req[:requestID]}.2.mbox"
 
     # download the encrypted mbox file
     if req[:status] == 'COMPLETED' && req[:fileUrl0]
       puts "Downloading #{encryptedPath}"
       (downloadUrl(req[:fileUrl0], encryptedPath)                   ) unless File.exists?(encryptedPath)
       (downloadUrl(req[:fileUrl1], encryptedPath1) if req[:fileUrl1]) unless File.exists?(encryptedPath1)
+      (downloadUrl(req[:fileUrl2], encryptedPath2) if req[:fileUrl2]) unless File.exists?(encryptedPath2)
 
       if $options[:decrypt]
         # decrypt the downloaded file
         puts "Decrypting #{encryptedPath}"
         system(decrypt_command(encryptedPath, decryptedPath))   unless File.exists?(decryptedPath)
-        system(decrypt_command(encryptedPath1, decryptedPath1)) unless File.exists?(decryptedPath1)
+        (system(decrypt_command(encryptedPath1, decryptedPath1)) if req[:fileUrl1]) unless File.exists?(decryptedPath1)
+        (system(decrypt_command(encryptedPath2, decryptedPath2)) if req[:fileUrl2]) unless File.exists?(decryptedPath2)
       end
     end
   }
