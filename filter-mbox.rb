@@ -1,3 +1,4 @@
+#!/usr/bin/env ruby
 #
 # This script is intended to be executed by a user with administrative privileges
 # for a Google Apps domain.
@@ -217,7 +218,7 @@ end
 # Otherwise, return nil.
 #
 def retainMessage?(message)
-  mailAddresses = message[:from] + message[:destinations]
+  mailAddresses = [ message[:from], message[:destinations] ].flatten.compact
   mailAddresses.each {|a|
     if $options[:accounts].has_key? getEmailDomain(a)
       return message
@@ -247,20 +248,24 @@ def parseMessage (message)
   e = Mail.new message
   puts e.message_id
   meetings = getCalendarItems e
-  email = { :message_id => e.message_id, 
-            :date => e.date ? e.date.strftime('%Y-%m-%dT%H:%M') : nil, 
-            :to => e.to, 
-            :from => e.from, 
-            :content_type => e.content_type,
-            :sender => e.sender, 
-            :subject => e.subject,
-            :in_reply_to => e.in_reply_to, 
-            :cc => e.cc, 
-            :bcc => e.bcc, 
-            :attachment? => e.attachments.length > 0, 
-            :meetings => meetings, 
-            :destinations => e.destinations }
-   retainMessage?(email)
+  begin
+    email = { :message_id => e.message_id, 
+              :date => e.date ? e.date.strftime('%Y-%m-%dT%H:%M') : nil, 
+              :to => e.to, 
+              :from => e.from, 
+              :content_type => e.content_type,
+              :sender => e.sender, 
+              :subject => e.subject,
+              :in_reply_to => e.in_reply_to, 
+              :cc => e.cc, 
+              :attachment? => e.attachments.length > 0,
+              :bcc => e.bcc, 
+              :meetings => meetings, 
+              :destinations => e.destinations }
+  rescue NoMethodError => e
+    email = {}
+  end
+  retainMessage?(email)
 end
 
 # Bit of monkey patching
